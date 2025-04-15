@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>U-LINK Feed</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>🕊️ U-LINK Feed</h1>
+
+    <h2>Latest Posts from TwitterDev</h2>
+    <button onclick="loadTimeline()">Refresh Timeline</button>
+    <ul id="tweetList"></ul>
+  </div>
+
+  <script>
+    async function loadTimeline() {
+      const response = await fetch('/twitter/timeline');
+      const data = await response.json();
+
+      const tweetList = document.getElementById('tweetList');
+      tweetList.innerHTML = '';
+
+      if (!data.data) {
+        tweetList.innerHTML = '<li>No tweets found or error loading tweets.</li>';
+        return;
+      }
+
+      data.data.forEach(tweet => {
+        const li = document.createElement('li');
+        li.textContent = tweet.text;
+        tweetList.appendChild(li);
+      });
+    }
+
+    // Auto load on page open
+    loadTimeline();
+  </script>
+</body>
+</html>
