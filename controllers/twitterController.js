@@ -1,5 +1,10 @@
-// Force dotenv config load (this is the fix!)
+// Force dotenv config load
 require('dotenv').config();
+
+// 🔁 TOGGLE BETWEEN LIVE & MOCK DATA
+const useMock = true; // ⬅️ Change this to false if you want to re-enable live API
+
+const mockTweets = require('../mockTweets');
 
 const axios = require('axios');
 const BEARER_TOKEN = process.env.BEARER_TOKEN;
@@ -13,6 +18,11 @@ const twitterApi = axios.create({
 });
 
 const getRecentTweets = async (req, res) => {
+  if (useMock) {
+    console.log('Using mock tweet data');
+    return res.status(200).json(mockTweets);
+  }
+
   try {
     const response = await twitterApi.get(
       '/tweets/search/recent?query=from:UWIGlobalCampus&max_results=10'

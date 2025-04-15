@@ -19,3 +19,20 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
+
+
+
+//Route Mounting 
+const postRoutes = require('./routes/post');
+const commentRoutes = require('./routes/comment');
+const reactionRoutes = require('./routes/reaction');
+const bookmarkRoutes = require('./routes/bookmark');
+const categoryRoutes = require('./routes/category');
+const authRoutes = require('./routes/auth');
+
+app.use('/posts', postRoutes);
+app.use('/comments', commentRoutes);
+app.use('/reactions', reactionRoutes);
+app.use('/bookmarks', bookmarkRoutes);
+app.use('/categories', categoryRoutes);
+app.use('/auth', authRoutes);

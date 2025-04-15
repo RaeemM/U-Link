@@ -9,29 +9,53 @@
   <div class="container">
     <h1>🕊️ U-LINK Feed</h1>
 
-    <h2>Latest Posts from TwitterDev</h2>
-    <button onclick="loadTimeline()">Refresh Timeline</button>
+    <h2>Latest Posts from UWIGlobalCampus</h2>
+    <button id="refreshBtn" onclick="loadTimeline()">Refresh Timeline</button>
     <ul id="tweetList"></ul>
   </div>
 
   <script>
     async function loadTimeline() {
-      const response = await fetch('/twitter/timeline');
-      const data = await response.json();
-
       const tweetList = document.getElementById('tweetList');
-      tweetList.innerHTML = '';
+      const btn = document.getElementById('refreshBtn');
 
-      if (!data.data) {
-        tweetList.innerHTML = '<li>No tweets found or error loading tweets.</li>';
-        return;
+      // Disable button temporarily
+      btn.disabled = true;
+      btn.textContent = "Cooldown...";
+
+      // Show loading state
+      tweetList.innerHTML = '<li>Loading tweets...</li>';
+
+      try {
+        const response = await fetch('/twitter/timeline');
+        const data = await response.json();
+
+        tweetList.innerHTML = ''; // Clear loading
+
+        if (data.message?.includes("Rate limit")) {
+          tweetList.innerHTML = '<li style="color: orange;">⛔ Rate limit hit. Please wait 15 minutes.</li>';
+          return;
+        }
+
+        if (!data.data || data.data.length === 0) {
+          tweetList.innerHTML = '<li>No tweets found.</li>';
+          return;
+        }
+
+        data.data.forEach(tweet => {
+          const li = document.createElement('li');
+          li.textContent = tweet.text;
+          tweetList.appendChild(li);
+        });
+      } catch (err) {
+        tweetList.innerHTML = '<li style="color: red;">⚠️ An error occurred while fetching tweets.</li>';
+        console.error('Frontend fetch error:', err);
+      } finally {
+        setTimeout(() => {
+          btn.disabled = false;
+          btn.textContent = "Refresh Timeline";
+        }, 15000); // Cooldown for 15 seconds
       }
-
-      data.data.forEach(tweet => {
-        const li = document.createElement('li');
-        li.textContent = tweet.text;
-        tweetList.appendChild(li);
-      });
     }
 
     // Auto load on page open
