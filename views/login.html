@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>U-Link Login</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: url('/images/campus.png') no-repeat center center fixed;
+      background-size: cover;
+    }
+
+    .title {
+      position: absolute;
+      top: 2rem;
+      font-size: 3rem;
+      font-weight: bold;
+      color: #0a1c40;
+    }
+
+    .login-container {
+      background: #ffffffee;
+      border-radius: 1rem;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+      width: 90%;
+      max-width: 400px;
+      text-align: center;
+      padding: 2.5rem;
+      position: relative;
+      z-index: 2;
+    }
+
+    .icon {
+      background: white;
+      display: inline-block;
+      padding: 0.6rem;
+      font-size: 1.5rem;
+      border-radius: 50%;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      margin-bottom: 1rem;
+    }
+
+    input {
+      width: 100%;
+      padding: 0.75rem;
+      margin: 0.75rem 0;
+      border: 1px solid #ccc;
+      border-radius: 0.5rem;
+      font-size: 1rem;
+    }
+
+    button {
+      width: 100%;
+      padding: 0.75rem;
+      background-color: #0a1c40;
+      color: white;
+      font-size: 1rem;
+      font-weight: bold;
+      border: none;
+      border-radius: 0.5rem;
+      cursor: pointer;
+    }
+
+    .footer {
+      position: absolute;
+      bottom: 1rem;
+      font-size: 0.85rem;
+      color: #eee;
+      text-align: center;
+      width: 100%;
+    }
+
+    .error {
+      color: red;
+      font-size: 0.9rem;
+      margin-top: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="title">U-Link</div>
+
+  <div class="login-container">
+    <div class="icon">👍</div>
+    <form id="loginForm">
+      <input type="text" id="username" placeholder="Login" required />
+      <input type="password" id="password" placeholder="Password" required />
+      <button type="submit">Login</button>
+      <p class="error" id="errorText"></p>
+    </form>
+  </div>
+
+  <div class="footer">© University Inbound</div>
+
+  <script>
+    const form = document.getElementById("loginForm");
+    const errorText = document.getElementById("errorText");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const username = document.getElementById("username").value;
+      const password = document.getElementById("password").value;
+
+      const response = await fetch("/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ username, password })
+      });
+
+      const data = await response.json();
+
+      if (response.status === 200) {
+        localStorage.setItem("user", JSON.stringify(data.user));
+        window.location.href = "/";
+      } else {
+        errorText.textContent = data.message || "Login failed";
+      }
+    });
+  </script>
+
+</body>
+</html>

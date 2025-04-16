@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>U-LINK Feed</title>
+  <link rel="stylesheet" href="/style.css" />
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #1d2b27;
+      color: #f5f1e3;
+      padding: 2rem;
+    }
+
+    #header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    #tweetList {
+      margin-top: 2rem;
+    }
+
+    button {
+      padding: 0.4rem 1rem;
+      border: none;
+      border-radius: 0.3rem;
+      background: #d4af37;
+      color: #1d2b27;
+      cursor: pointer;
+    }
+
+    input, select {
+      padding: 0.5rem;
+      margin: 0.5rem 0;
+      border-radius: 0.3rem;
+      border: none;
+    }
+
+    form {
+      margin-bottom: 2rem;
+    }
+
+    .post-box {
+      background: #2f3e39;
+      padding: 1rem;
+      border-radius: 10px;
+      margin-bottom: 1.5rem;
+    }
+
+    ul {
+      padding-left: 1.2rem;
+    }
+  </style>
+</head>
+<body>
+  <div id="header">
+    <h1>🕊️ U-LINK Feed</h1>
+    <div>
+      <span id="welcomeText"></span>
+      <button id="logoutBtn">Logout</button>
+    </div>
+  </div>
+
+  <hr />
+
+  <h2>Create a New Post</h2>
+  <form id="postForm">
+    <input type="text" id="postContent" placeholder="What's on your mind?" required />
+    <select id="postCategory">
+      <option value="Meme">Meme</option>
+      <option value="News">News</option>
+      <option value="Thought">Thought</option>
+    </select>
+    <button type="submit">Post</button>
+  </form>
+
+  <h2>All User Posts</h2>
+  <div id="postFeed"></div>
+
+  <script>
+    // 🔐 Check for login
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (!user) {
+      window.location.href = "/login";
+    } else {
+      document.getElementById("welcomeText").textContent = `Welcome, ${user.username}`;
+    }
+
+    // 🚪 Logout
+    document.getElementById("logoutBtn").addEventListener("click", () => {
+      localStorage.removeItem("user");           // Clear the user session
+     window.location.href = "/login";           // Redirect to the login page
+      });
+
+
+    // 🐦 Load tweets
+    async function loadTimeline() {
+      const btn = document.getElementById("refreshBtn");
+      const tweetList = document.getElementById("tweetList");
+
+      btn.disabled = true;
+      btn.textContent = "Cooldown...";
+      tweetList.innerHTML = "<li>Loading tweets...</li>";
+
+      const response = await fetch("/twitter/timeline");
+      const data = await response.json();
+
+      tweetList.innerHTML = "";
+
+      if (data.message?.includes("Rate limit")) {
+        tweetList.innerHTML = '<li style="color: orange;">⛔ Rate limit hit. Please wait 15 minutes.</li>';
+      } else if (!data.data || data.data.length === 0) {
+        tweetList.innerHTML = "<li>No tweets found.</li>";
+      } else {
+        data.data.forEach(tweet => {
+          const li = document.createElement("li");
+          li.textContent = tweet.text;
+          tweetList.appendChild(li);
+        });
+      }
+
+      setTimeout(() => {
+        btn.disabled = false;
+        btn.textContent = "Refresh Timeline";
+      }, 15000);
+    }
+
+    // 📝 Create Post
+    document.getElementById("postForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const content = document.getElementById("postContent").value;
+      const category = document.getElementById("postCategory").value;
+
+      const res = await fetch("/posts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: user.id, content, category })
+      });
+
+      const post = await res.json();
+      document.getElementById("postContent").value = "";
+      loadUserPosts();
+    });
+
+    // 📄 Load all user posts
+    async function loadUserPosts() {
+      const feed = document.getElementById("postFeed");
+      feed.innerHTML = "<p>Loading posts...</p>";
+
+      const res = await fetch("/posts");
+      const posts = await res.json();
+      feed.innerHTML = "";
+
+      for (const post of posts.reverse()) {
+        const postDiv = document.createElement("div");
+        postDiv.className = "post-box";
+        postDiv.innerHTML = `
+          <p><strong>${post.content}</strong></p>
+          <p>By: User ${post.userId}</p>
+          <p>Category: ${post.category}</p>
+
+          <p>👍 ${post.likes} | 👎 ${post.dislikes}</p>
+          <form onsubmit="commentOnPost(event, ${post.id})">
+            <input type="text" placeholder="Add a comment..." id="comment-${post.id}" required />
+            <button type="submit">Comment</button>
+          </form>
+          <ul id="comments-${post.id}">Loading comments...</ul>
+        `;
+        feed.appendChild(postDiv);
+        loadComments(post.id);
+      }
+    }
+
+    // 💬 Post comment
+    async function commentOnPost(e, postId) {
+      e.preventDefault();
+      const input = document.getElementById(`comment-${postId}`);
+      const content = input.value;
+
+      await fetch(`/comments/${postId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: user.id, content })
+      });
+
+      input.value = "";
+      loadComments(postId);
+    }
+
+    // 💬 Load comments
+    async function loadComments(postId) {
+      const res = await fetch(`/comments/${postId}`);
+      const comments = await res.json();
+      const ul = document.getElementById(`comments-${postId}`);
+      ul.innerHTML = "";
+
+      for (const comment of comments) {
+        const li = document.createElement("li");
+        li.textContent = comment.content;
+        ul.appendChild(li);
+      }
+    }
+
+    // Auto-load
+    loadTimeline();
+    loadUserPosts();
+  </script>
+</body>
+</html>
