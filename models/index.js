@@ -1,16 +1,24 @@
-//Used to simulate a basic "Database"
+const User = require('./User');
+const Post = require('./Post');
+const Comment = require('./Comment');
+const Reaction = require('./Reaction');
+const Bookmark = require('./Bookmark');
+const Category = require('./Category');
 
+// 🧍 Create users and keep references
+const bob = new User('bob', 'bobpass');
+const mikaela = new User('mikaela', 'chocolatequeen');
+const din = new User('din_din', 'grippy123');
 
-const User = require('./user');
-const Post = require('./post');
-const Comment = require('./comment');
-const Reaction = require('./reaction');
-const Bookmark = require('./bookmark');
-const Category = require('./category');
+const users = [bob, mikaela, din];
 
-// In-memory DB for now
-const users = [new User('bob', 'bobpass')];
-const posts = [];
+// 📝 Create posts using correct user IDs
+const posts = [
+  new Post(mikaela.id, "Mikaela's morning thoughts 🌞", "Thought"),
+  new Post(din.id, "Spotted a meme of Nickell 🤣", "Meme"),
+  new Post(mikaela.id, "UWI News: New cafeteria menu dropped!", "News")
+];
+
 const comments = [];
 const reactions = [];
 const bookmarks = [];
@@ -19,6 +27,10 @@ const categories = [
   new Category('Meme'),
   new Category('Thought'),
 ];
+
+function getUserById(id) {
+  return users.find(u => u.id === id);
+}
 
 module.exports = {
   User,
@@ -32,5 +44,6 @@ module.exports = {
   comments,
   reactions,
   bookmarks,
-  categories
+  categories,
+  getUserById
 };

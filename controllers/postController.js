@@ -1,8 +1,13 @@
-const { posts, Post } = require('../models');
+const { posts, Post,getUserById } = require('../models');
 
 const getAllPosts = (req, res) => {
-  res.json(posts);
+  const postsWithUsernames = posts.map(p => ({
+    ...p,
+    username: getUserById(p.userId)?.username || "Unknown"
+  }));
+  res.json(postsWithUsernames);
 };
+
 
 const createPost = (req, res) => {
   const { userId, content, category } = req.body;
